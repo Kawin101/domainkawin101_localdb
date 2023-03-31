@@ -1,0 +1,95 @@
+import 'package:domainkawin101_localdb/models/note.dart';
+import 'package:domainkawin101_localdb/screens/note_screen.dart';
+import 'package:flutter/material.dart';
+
+enum ViewType { list, staggered }
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // value
+  ViewType current = ViewType.list;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Notes"),
+        actions: _appBarAction(),
+      ),
+      body: SafeArea(
+        child: StaggeredWidget(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _newNote(context),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  _newNote(BuildContext context) {
+    Note newNote = Note(-1, "", "", DateTime.now(), DateTime.now());
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => NoteScreen(
+                  note: newNote,
+                )));
+  }
+
+  _appBarAction() {
+    return [
+      Padding(
+        padding: EdgeInsets.all(8.0),
+        child: GestureDetector(
+          onTap: () => _changeView(),
+          child: Icon(Icons.view_headline),
+        ),
+      )
+    ];
+  }
+
+  _changeView() {
+    setState(() {
+      if (current == ViewType.list) {
+        current = ViewType.staggered;
+      } else {
+        current = ViewType.list;
+      }
+    });
+  }
+}
+
+class StaggeredWidget extends StatefulWidget {
+  ViewType currentView;
+  StaggeredWidget({required this.currentView});
+
+  @override
+  State<StaggeredWidget> createState() => _StaggeredWidgetState();
+}
+
+class _StaggeredWidgetState extends State<StaggeredWidget> {
+  List<Map<String, dynamic>> _allNotes = [];
+  @override
+  Widget build(BuildContext context) {
+    // get all data from database
+    // add to _allNotes
+    return StaggeredGrid.count(
+        crossAxisCount: widget.currentView == ViewType.list ? 1 : 2,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
+        children: List.generate(_allNotes.length, (index) {
+          var note = _allNotes[index];
+          Note existNote = Note(note['id'], note['title'], note['content'],
+              note['date_created'], note['date_last_edited']);
+          return GestureDetector(
+              onTap: () => NoteScreen(note: existNote),
+              child: Text(existNote.title));
+        }));
+  }
+}
